@@ -206,6 +206,34 @@ curl http://127.0.0.1:8000/reports/latest
 curl -X POST http://127.0.0.1:8000/batch/run
 ```
 
+## Docker Compose 실행
+
+Docker Desktop을 실행한 뒤, 프로젝트 폴더에서 아래 명령으로 API를 컨테이너로 실행합니다.
+
+```bash
+docker compose up --build
+```
+
+백그라운드 실행은 아래 명령을 사용합니다.
+
+```bash
+docker compose up --build -d
+```
+
+컨테이너가 실행된 뒤에도 API 주소는 동일합니다.
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+`outputs/` 폴더는 컨테이너와 로컬 폴더를 공유합니다. 따라서 `POST /batch/run`으로 생성한 Markdown·JSON 리포트는 컨테이너를 종료해도 로컬 `outputs/`에 남습니다.
+
+컨테이너 중지는 다음과 같이 합니다.
+
+```bash
+docker compose down
+```
+
 ## 현재 범위
 
 - 헤드라인 메타데이터 기반 이슈 요약만 제공
@@ -217,6 +245,5 @@ curl -X POST http://127.0.0.1:8000/batch/run
 ## 다음 단계
 
 1. 기사와 리포트를 PostgreSQL에 저장
-2. Docker로 로컬 실행 환경 통일
-3. 스케줄러로 매일 자동 실행
-4. 대표 기사 본문을 추가 수집해 요약 정확도 비교
+2. 스케줄러로 매일 자동 실행
+3. 대표 기사 본문을 추가 수집해 요약 정확도 비교
