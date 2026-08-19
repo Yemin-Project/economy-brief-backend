@@ -2,9 +2,10 @@
 
 from dataclasses import asdict
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.concurrency import run_in_threadpool
 
+from app.batch_runs import BatchRun, get_batch_run, list_batch_runs
 from app.main import BatchResult, StoredReport, read_latest_report, run_batch
 
 
@@ -34,10 +35,30 @@ def create_app() -> FastAPI:
         payload = asdict(result)
         return {
             "status": "completed",
+            "batch_run_id": payload["batch_run_id"],
             "article_count": payload["article_count"],
             "articles_file": payload["articles_path"].name,
             "report_file": payload["report_path"].name,
         }
+
+    @app.get("/batch-runs", tags=["batch"])
+    def batch_run_list(
+        limit: int = Query(default=20, ge=1, le=100),
+    ) -> dict[str, list[dict[str, object]]]:
+        """Return recent batch execution records, newest first."""
+        runs = list_batch_runs(limit=limit)
+        return {"items": [asdict(run) for run in runs]}
+
+    @app.get("/batch-runs/{batch_run_id}", tags=["batch"])
+    def batch_run_detail(batch_run_id: int) -> dict[str, object]:
+        """Return one batch execution record by ID."""
+        run: BatchRun | None = get_batch_run(batch_run_id)
+        if run is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="배치 실행 이력을 찾을 수 없습니다.",
+            )
+        return asdict(run)
 
     @app.get("/reports/latest", tags=["reports"])
     def latest_report() -> dict[str, str]:
